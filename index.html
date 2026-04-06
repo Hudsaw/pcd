@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistemas Distribuídos - RPC, REST, Filas, Eventos</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #ccc;
+            margin-bottom: 30px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        }
+
+        .card h2 {
+            color: #1a1a2e;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .card h3 {
+            color: #16213e;
+            margin: 10px 0;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            font-size: 13px;
+        }
+
+        select, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 13px;
+        }
+
+        button {
+            background: #1a1a2e;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px 5px 0 0;
+        }
+
+        button:hover {
+            background: #16213e;
+        }
+
+        .message-area {
+            background: #f5f5f5;
+            border-radius: 8px;
+            padding: 10px;
+            height: 180px;
+            overflow-y: auto;
+            margin-top: 12px;
+            font-size: 12px;
+        }
+
+        .message {
+            padding: 6px 10px;
+            margin-bottom: 5px;
+            border-radius: 5px;
+            border-left: 3px solid;
+        }
+
+        .message.rpc { background: #e8f5e9; border-left-color: #4caf50; }
+        .message.rest { background: #fff3e0; border-left-color: #ff9800; }
+        .message.queue { background: #e3f2fd; border-left-color: #2196f3; }
+        .message.event { background: #f3e5f5; border-left-color: #9c27b0; }
+        .message.system { background: #ececec; border-left-color: #666; }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        .comparison-table th, .comparison-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        .comparison-table th {
+            background: #1a1a2e;
+            color: white;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+        }
+
+        .badge-green { background: #4caf50; color: white; }
+        .badge-orange { background: #ff9800; color: white; }
+        .badge-red { background: #f44336; color: white; }
+
+        .service-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .service {
+            flex: 1;
+            background: #f5f5f5;
+            border-radius: 8px;
+            padding: 10px;
+        }
+
+        .service h4 {
+            font-size: 12px;
+            margin-bottom: 8px;
+        }
+
+        .service .msg-area {
+            height: 100px;
+            font-size: 11px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔗 Comunicação em Sistemas Distribuídos</h1>
+        <div class="subtitle">RPC • REST • Filas • Eventos • Microsserviços</div>
+
+        <div class="grid">
+            <!-- RPC -->
+            <div class="card">
+                <h2>📞 RPC - Remote Procedure Call</h2>
+                <div class="form-group">
+                    <label>Função:</label>
+                    <select id="rpcFunc">
+                        <option value="somar">somar(a, b) = a + b</option>
+                        <option value="multiplicar">multiplicar(a, b) = a × b</option>
+                        <option value="dividir">dividir(a, b) = a ÷ b</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Parâmetros (JSON):</label>
+                    <textarea id="rpcParams" rows="2">{"a": 10, "b": 5}</textarea>
+                </div>
+                <button onclick="callRPC()">Executar RPC</button>
+                <div id="rpcArea" class="message-area"></div>
+            </div>
+
+            <!-- REST -->
+            <div class="card">
+                <h2>🌐 REST API</h2>
+                <div class="form-group">
+                    <label>Método:</label>
+                    <select id="restMethod">
+                        <option value="GET">GET - Buscar</option>
+                        <option value="POST">POST - Criar</option>
+                        <option value="PUT">PUT - Atualizar</option>
+                        <option value="DELETE">DELETE - Remover</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Recurso:</label>
+                    <select id="restResource">
+                        <option value="usuarios">/api/usuarios</option>
+                        <option value="produtos">/api/produtos</option>
+                    </select>
+                </div>
+                <button onclick="callREST()">Executar REST</button>
+                <div id="restArea" class="message-area"></div>
+            </div>
+        </div>
+
+        <div class="grid">
+            <!-- Fila -->
+            <div class="card">
+                <h2>📨 Fila de Mensagens</h2>
+                <div class="form-group">
+                    <label>Fila:</label>
+                    <select id="queueName">
+                        <option value="email">email_queue</option>
+                        <option value="notificacao">notification_queue</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Mensagem (JSON):</label>
+                    <textarea id="queueMsg" rows="2">{"to": "usuario@email.com", "texto": "Olá!"}</textarea>
+                </div>
+                <button onclick="sendToQueue()">📤 Enviar (Produtor)</button>
+                <button onclick="processQueue()">⚙️ Processar (Consumidor)</button>
+                <div id="queueArea" class="message-area"></div>
+            </div>
+
+            <!-- Eventos -->
+            <div class="card">
+                <h2>🎯 Event-Driven (Pub/Sub)</h2>
+                <div class="form-group">
+                    <label>Evento:</label>
+                    <select id="eventType">
+                        <option value="user.created">user.created</option>
+                        <option value="order.placed">order.placed</option>
+                        <option value="payment.done">payment.done</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Payload (JSON):</label>
+                    <textarea id="eventPayload" rows="2">{"userId": 123, "nome": "João"}</textarea>
+                </div>
+                <button onclick="emitEvent()">📢 Emitir Evento</button>
+                <div id="eventArea" class="message-area"></div>
+            </div>
+        </div>
+
+        <!-- Microsserviços -->
+        <div class="card">
+            <h2>🏗️ Microsserviços - Fluxo Prático</h2>
+            <div class="service-row">
+                <div class="service"><h4>🛒 Pedidos</h4><div id="pedidoLog" class="msg-area"></div></div>
+                <div class="service"><h4>💳 Pagamento</h4><div id="pagamentoLog" class="msg-area"></div></div>
+                <div class="service"><h4>📧 Notificação</h4><div id="notificacaoLog" class="msg-area"></div></div>
+            </div>
+            <button onclick="simularFluxo()" style="width:100%; margin-top:10px">🔄 Simular Fluxo de Microsserviços</button>
+        </div>
+
+        <!-- Tabela Comparativa -->
+        <div class="card">
+            <h2>📊 Comparativo dos Mecanismos</h2>
+            <table class="comparison-table">
+                <thead><tr><th>Mecanismo</th><th>Sincronia</th><th>Acoplamento</th><th>Quando usar</th></tr></thead>
+                <tbody>
+                    <tr><td><strong>RPC</strong></td><td>🟢 Síncrono</td><td>🔴 Forte</td><td>Operações rápidas, baixa latência</td></tr>
+                    <tr><td><strong>REST</strong></td><td>🟢 Síncrono</td><td>🟡 Médio</td><td>APIs públicas, CRUD</td></tr>
+                    <tr><td><strong>Fila</strong></td><td>🔴 Assíncrono</td><td>🟢 Baixo</td><td>Tarefas pesadas, e-mails, relatórios</td></tr>
+                    <tr><td><strong>Eventos</strong></td><td>🔴 Assíncrono</td><td>🟢 Muito baixo</td><td>Reações em cascata, tempo real</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+
+        // Fila de mensagens
+        let fila = [];
+
+        // Subscribers de eventos
+        const subscribers = {
+            'user.created': [],
+            'order.placed': [],
+            'payment.done': []
+        };
+
+        // ==================== RPC ====================
+        const rpcFuncoes = {
+            somar: (p) => p.a + p.b,
+            multiplicar: (p) => p.a * p.b,
+            dividir: (p) => p.b !== 0 ? p.a / p.b : 'Erro: divisão por zero'
+        };
+
+        function callRPC() {
+            const func = document.getElementById('rpcFunc').value;
+            let params;
+            try { params = JSON.parse(document.getElementById('rpcParams').value); }
+            catch(e) { addMsg('rpcArea', '❌ JSON inválido', 'rpc'); return; }
+
+            const resultado = rpcFuncoes[func](params);
+            addMsg('rpcArea', `📞 ${func}(${JSON.stringify(params)}) → Resultado: ${resultado}`, 'rpc');
+        }
+
+        // ==================== REST ====================
+        const banco = {
+            usuarios: [{ id: 1, nome: 'João' }, { id: 2, nome: 'Maria' }],
+            produtos: [{ id: 1, nome: 'Notebook', preco: 2500 }]
+        };
+
+        function callREST() {
+            const method = document.getElementById('restMethod').value;
+            const resource = document.getElementById('restResource').value;
+            let resposta;
+
+            switch(method) {
+                case 'GET':
+                    resposta = { status: 200, dados: banco[resource] };
+                    break;
+                case 'POST':
+                    resposta = { status: 201, mensagem: `${resource} criado`, id: Date.now() };
+                    break;
+                case 'PUT':
+                    resposta = { status: 200, mensagem: `${resource} atualizado` };
+                    break;
+                case 'DELETE':
+                    resposta = { status: 204, mensagem: `${resource} removido` };
+                    break;
+                default: resposta = { error: 'Método inválido' };
+            }
+            addMsg('restArea', `🌐 ${method} /api/${resource} → ${JSON.stringify(resposta)}`, 'rest');
+        }
+
+        // ==================== FILA ====================
+        function sendToQueue() {
+            const queue = document.getElementById('queueName').value;
+            let msg;
+            try { msg = JSON.parse(document.getElementById('queueMsg').value); }
+            catch(e) { addMsg('queueArea', '❌ JSON inválido', 'queue'); return; }
+            
+            fila.push({ queue, msg, id: Date.now() });
+            addMsg('queueArea', `📤 Enfileirado em ${queue}: ${JSON.stringify(msg)} [Fila: ${fila.length}]`, 'queue');
+        }
+
+        function processQueue() {
+            if (fila.length === 0) {
+                addMsg('queueArea', '📭 Fila vazia', 'queue');
+                return;
+            }
+            const item = fila.shift();
+            addMsg('queueArea', `⚙️ Processado: ${item.queue} → ${JSON.stringify(item.msg)} [Restam: ${fila.length}]`, 'queue');
+        }
+
+        // ==================== EVENTOS ====================
+        // Registrar subscribers
+        subscribers['user.created'].push((p) => addMsg('eventArea', `📧 [Notificação] E-mail para ${p.nome}`, 'event'));
+        subscribers['user.created'].push((p) => addMsg('eventArea', `📊 [Auditoria] Log: usuário ${p.userId} criado`, 'event'));
+        subscribers['order.placed'].push((p) => addMsg('eventArea', `💰 [Pagamento] Reserva de R$ ${p.total}`, 'event'));
+        subscribers['payment.done'].push((p) => addMsg('eventArea', `📧 [Notificação] Pedido #${p.orderId} pago!`, 'event'));
+
+        function emitEvent() {
+            const evento = document.getElementById('eventType').value;
+            let payload;
+            try { payload = JSON.parse(document.getElementById('eventPayload').value); }
+            catch(e) { addMsg('eventArea', '❌ Payload inválido', 'event'); return; }
+            
+            addMsg('eventArea', `🎯 EVENTO: ${evento} → ${JSON.stringify(payload)}`, 'event');
+            
+            if (subscribers[evento]) {
+                subscribers[evento].forEach(fn => fn(payload));
+            }
+        }
+
+        // ==================== MICROSSERVIÇOS ====================
+        function addMsg(areaId, texto, tipo) {
+            const area = document.getElementById(areaId);
+            if (!area) return;
+            const div = document.createElement('div');
+            div.className = `message ${tipo}`;
+            div.innerHTML = `[${new Date().toLocaleTimeString()}] ${texto}`;
+            area.appendChild(div);
+            area.scrollTop = area.scrollHeight;
+            if (area.children.length > 15) area.removeChild(area.children[0]);
+        }
+
+        function simularFluxo() {
+            const pedidoId = Math.floor(Math.random() * 10000);
+            const total = 259.90;
+            
+            addMsg('pedidoLog', `🛒 Pedido #${pedidoId} criado - Total: R$ ${total}`, 'system');
+            
+            setTimeout(() => {
+                addMsg('pagamentoLog', `💳 Processando pagamento de R$ ${total}...`, 'system');
+                setTimeout(() => {
+                    addMsg('pagamentoLog', `✅ Pagamento aprovado para pedido #${pedidoId}`, 'event');
+                    addMsg('notificacaoLog', `📧 E-mail enviado: Pedido #${pedidoId} confirmado!`, 'event');
+                    addMsg('pedidoLog', `🎉 Pedido #${pedidoId} finalizado!`, 'system');
+                }, 1000);
+            }, 800);
+        }
+
+        // Inicializar áreas com mensagens
+        function init() {
+            addMsg('rpcArea', '✅ RPC pronto - Execute uma função', 'system');
+            addMsg('restArea', '✅ REST pronto - Faça uma requisição', 'system');
+            addMsg('queueArea', '✅ Fila pronta - Envie e processe mensagens', 'system');
+            addMsg('eventArea', '✅ Eventos prontos - Emita um evento', 'system');
+            addMsg('pedidoLog', '🟢 Serviço de Pedidos online', 'system');
+            addMsg('pagamentoLog', '🟢 Serviço de Pagamento online', 'system');
+            addMsg('notificacaoLog', '🟢 Serviço de Notificação online', 'system');
+        }
+        init();
+    </script>
+</body>
+</html>
