@@ -1,0 +1,18 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    
+    # Ignora arquivos existentes
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    
+    # Redireciona tudo para index.php (sem precisar do caminho base)
+    RewriteRule ^(.*)$ index.php [QSA,L]
+</IfModule>
+
+# Garantir que arquivos CSS e JS sejam servidos corretamente
+<FilesMatch "\.(css|js|jpg|png|gif|ico)$">
+    <IfModule mod_expires.c>
+        ExpiresActive On
+        ExpiresDefault "access plus 1 month"
+    </IfModule>
+</FilesMatch>

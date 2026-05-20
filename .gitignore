@@ -1,0 +1,22 @@
+# .gitignore
+
+# Dados locais (mantém estrutura mas não os dados)
+data/*.json
+!data/.gitkeep
+
+# Logs
+*.log
+error_log
+
+# Arquivos temporários
+*.tmp
+*.lock
+
+# IDE
+.vscode/
+.idea/
+*.sublime-*
+
+# OS
+.DS_Store
+Thumbs.db
