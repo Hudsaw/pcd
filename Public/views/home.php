@@ -9,13 +9,13 @@
 <body>
     <div class="container">
         <h1>🔗 Sistema Distribuído</h1>
-        <div class="subtitle">Síncrono | Assíncrono | REST | SSE | gRPC | Mutex</div>
+        <div class="subtitle">Síncrono | Assíncrono | REST | Polling | gRPC | Mutex</div>
 
         <!-- Status Bar -->
         <div class="status-bar">
             <div class="status-item">
-                <span>📡 SSE:</span>
-                <span id="sseStatus">● Conectando...</span>
+                <span>🔄 Polling:</span>
+                <span id="pollingStatus">● Iniciando...</span>
             </div>
             <div class="status-item">
                 <span>📨 Fila:</span>
@@ -68,11 +68,11 @@
                 <div id="grpcArea" class="message-area"></div>
             </div>
 
-            <!-- SSE - Tempo Real -->
+            <!-- Polling - Tempo Real -->
             <div class="card">
-                <h2>⚡ Atualização em TEMPO REAL (SSE)</h2>
-                <p><span class="badge badge-warning">Server-Sent Events</span> Socket simplificado</p>
-                <div id="realtimeQueue" class="queue-item">Aguardando conexão SSE...</div>
+                <h2>⚡ Atualização em TEMPO REAL (Polling)</h2>
+                <p><span class="badge badge-warning">Polling a cada 2 segundos</span> Compatível com qualquer hospedagem</p>
+                <div id="realtimeQueue" class="queue-item">Aguardando conexão...</div>
                 <div id="realtimeArea" class="message-area"></div>
             </div>
         </div>
@@ -106,10 +106,9 @@
     <script src="js/sync.js"></script>
     <script src="js/async.js"></script>
     <script src="js/grpc.js"></script>
-    <script src="js/sse.js"></script>
+    <script src="js/polling.js"></script>
     
     <script>
-        // Teste para verificar se as funções estão carregadas
         setTimeout(function() {
             console.log('=== Verificação de Funções ===');
             console.log('enviarSync:', typeof enviarSync);
@@ -117,7 +116,6 @@
             console.log('enviarAsync:', typeof enviarAsync);
             console.log('processarFila:', typeof processarFila);
             console.log('chamarGrpc:', typeof chamarGrpc);
-            console.log('connectSSE:', typeof connectSSE);
         }, 500);
     </script>
 </body>

@@ -1,17 +1,31 @@
 // Public/js/sync.js
+function addMessageSync(texto, tipo) {
+    tipo = tipo || 'system';
+    let container = document.getElementById('syncArea');
+    if (!container) return;
+    let div = document.createElement('div');
+    div.className = 'message ' + tipo;
+    let now = new Date();
+    let time = now.toLocaleTimeString();
+    div.innerHTML = '[' + time + '] ' + texto;
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+    if (container.children.length > 20) container.removeChild(container.children[0]);
+}
+
 function getBaseUrl() {
-    var path = window.location.pathname;
-    var basePath = path.substring(0, path.lastIndexOf('/') + 1);
+    let path = window.location.pathname;
+    let basePath = path.substring(0, path.lastIndexOf('/') + 1);
     return basePath;
 }
 
 function enviarSync() {
-    var input = document.getElementById('msgSync');
-    var content = input.value;
+    let input = document.getElementById('msgSync');
+    let content = input.value;
     if (!content) { alert('Digite uma mensagem'); return; }
     addMessageSync('📤 Enviando: "' + content + '"', 'system');
     
-    var baseUrl = getBaseUrl();
+    let baseUrl = getBaseUrl();
     fetch(baseUrl + 'mensagens', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -35,14 +49,14 @@ function enviarSync() {
 
 function buscarMensagens() {
     addMessageSync('📋 Buscando mensagens...', 'system');
-    var baseUrl = getBaseUrl();
+    let baseUrl = getBaseUrl();
     fetch(baseUrl + 'mensagens')
     .then(function(res) { return res.json(); })
     .then(function(data) {
         if (data.status === 'success') {
             addMessageSync('📋 ' + data.messages.length + ' mensagens encontradas', 'sync');
             if (data.messages.length > 0) {
-                var ultimas = data.messages.slice(-3);
+                let ultimas = data.messages.slice(-3);
                 ultimas.forEach(function(m) {
                     addMessageSync('   - [' + m.timestamp + '] ' + m.content, 'sync');
                 });

@@ -22,10 +22,6 @@ spl_autoload_register(function($class) {
         require_once $file;
         return true;
     }
-    
-    if (DEBUG_MODE) {
-        error_log("Classe não encontrada: " . $class . " - Arquivo: " . $file);
-    }
     return false;
 });
 
@@ -61,32 +57,28 @@ if (empty($requestUri) || $requestUri[0] !== '/') {
     $requestUri = '/' . $requestUri;
 }
 
-// Log de debug (opcional, descomente se precisar)
-// error_log("DEBUG ROTA - URI: $requestUri, Method: $method");
-
 // Instanciar controller
 $controller = new App\Controllers\MessageController();
 
-// Array de rotas (prioridade para APIs primeiro)
+// Rotas
 $routes = [
-    // API Routes (sem saída HTML)
+    // API Routes
     ['pattern' => '/mensagens', 'method' => 'GET', 'handler' => 'getMessages'],
     ['pattern' => '/mensagens', 'method' => 'POST', 'handler' => 'postMessage'],
     ['pattern' => '/processar-fila', 'method' => 'POST', 'handler' => 'processQueue'],
-    ['pattern' => '/sse/stream', 'method' => 'GET', 'handler' => 'sseStream'],
-    ['pattern' => '/grpc/enviar', 'method' => 'POST', 'handler' => 'grpcEnviar'],
+    ['pattern' => '/polling/atualizar', 'method' => 'GET', 'handler' => 'pollingUpdate'], // Novo endpoint
 ];
 
-// Verificar rotas de API primeiro
+// Verificar rotas de API
 foreach ($routes as $route) {
     if ($requestUri === $route['pattern'] && $method === $route['method']) {
         $handler = $route['handler'];
         $controller->$handler();
-        exit; // Importante: parar execução após API
+        exit;
     }
 }
 
-// Se não for API, verificar arquivos estáticos
+// Verificar arquivos estáticos
 if (preg_match('/\.(css|js|png|jpg|jpeg|gif|ico)$/', $requestUri)) {
     $filePath = PUBLIC_PATH . str_replace('/', DS, $requestUri);
     if (file_exists($filePath)) {
@@ -108,13 +100,13 @@ if (preg_match('/\.(css|js|png|jpg|jpeg|gif|ico)$/', $requestUri)) {
     }
 }
 
-// Rota padrão (home)
+// Rota padrão
 if ($requestUri == '/' || $requestUri == '/index.php') {
     $controller->index();
     exit;
 }
 
-// Se nenhuma rota correspondeu
+// 404
 header('Content-Type: application/json');
 http_response_code(404);
 echo json_encode(['error' => 'Rota não encontrada: ' . $requestUri]);

@@ -8,14 +8,14 @@ use App\Models\Queue;
 class MessageController extends Controller {
     private $messageModel;
     private $queueModel;
+    private $lastMessageId = null;
     
     public function __construct() {
-        parent::__construct(); // Chama o construtor da classe pai
+        parent::__construct();
         $this->messageModel = new Message();
         $this->queueModel = new Queue();
     }
     
-    // ==================== VIEW PRINCIPAL ====================
     public function index() {
         $messages = $this->messageModel->getAll();
         $queueSize = $this->queueModel->getSize();
@@ -28,12 +28,9 @@ class MessageController extends Controller {
         ]);
     }
     
-    // ==================== API REST ====================
     // GET /mensagens
     public function getMessages() {
-        // Limpar qualquer output buffer
         $this->clearOutputBuffers();
-        
         $messages = $this->messageModel->getAll();
         $this->jsonResponse([
             'status' => 'success',
@@ -43,7 +40,6 @@ class MessageController extends Controller {
     
     // POST /mensagens
     public function postMessage() {
-        // Limpar qualquer output buffer
         $this->clearOutputBuffers();
         
         $input = json_decode(file_get_contents('php://input'), true);
@@ -57,7 +53,6 @@ class MessageController extends Controller {
         $content = trim($input['content']);
         
         if ($type === 'sync') {
-            // SÍNCRONO: processa e responde imediatamente
             $message = $this->messageModel->save($content, 'sync');
             $this->jsonResponse([
                 'status' => 'success',
@@ -66,7 +61,6 @@ class MessageController extends Controller {
                 'message' => $message
             ]);
         } else {
-            // ASSÍNCRONO: entra na fila
             $queued = $this->queueModel->enqueue($content, 'async');
             $this->jsonResponse([
                 'status' => 'queued',
@@ -78,16 +72,14 @@ class MessageController extends Controller {
         }
     }
     
-    // ==================== PROCESSAR FILA (Assíncrono) ====================
+    // POST /processar-fila
     public function processQueue() {
         $this->clearOutputBuffers();
         
         $item = $this->queueModel->dequeue();
         
         if ($item) {
-            // Simula processamento
             sleep(1);
-            // Salva como processada
             $saved = $this->messageModel->save($item['content'], 'async_processed');
             $this->jsonResponse([
                 'status' => 'processed',
@@ -102,62 +94,44 @@ class MessageController extends Controller {
         }
     }
     
-    // ==================== SSE (SERVER-SENT EVENTS) ====================
-    public function sseStream() {
-        // Limpar todos os buffers antes de enviar headers
+    // NOVO: GET /polling/atualizar (substitui SSE)
+    public function pollingUpdate() {
         $this->clearOutputBuffers();
         
-        // Headers para SSE
-        header('Content-Type: text/event-stream');
-        header('Cache-Control: no-cache');
-        header('Connection: keep-alive');
-        header('X-Accel-Buffering: no');
+        $lastId = isset($_GET['last_id']) ? $_GET['last_id'] : null;
+        $lastQueueSize = isset($_GET['last_queue_size']) ? (int)$_GET['last_queue_size'] : -1;
         
-        // Iniciar com uma mensagem de conexão
-        echo "data: " . json_encode(['type' => 'connected', 'message' => 'SSE Conectado']) . "\n\n";
-        flush();
+        $messages = $this->messageModel->getAll();
+        $queueSize = $this->queueModel->getSize();
         
-        $lastMessageId = null;
-        $lastQueueSize = $this->queueModel->getSize();
-        
-        // Loop infinito
-        while (true) {
-            // Verifica novas mensagens
-            $messages = $this->messageModel->getAll();
-            $messageCount = count($messages);
-            $lastMessage = $messageCount > 0 ? $messages[$messageCount - 1] : null;
-            
-            if ($lastMessage && $lastMessage['id'] !== $lastMessageId) {
-                $lastMessageId = $lastMessage['id'];
-                echo "data: " . json_encode([
-                    'type' => 'new_message',
-                    'content' => $lastMessage['content'],
-                    'timestamp' => $lastMessage['timestamp']
-                ]) . "\n\n";
-                flush();
+        // Verificar novas mensagens
+        $newMessages = [];
+        if ($lastId) {
+            foreach ($messages as $msg) {
+                if ($msg['id'] > $lastId) {
+                    $newMessages[] = $msg;
+                }
             }
-            
-            // Verifica tamanho da fila
-            $currentQueueSize = $this->queueModel->getSize();
-            if ($currentQueueSize != $lastQueueSize) {
-                $lastQueueSize = $currentQueueSize;
-                echo "data: " . json_encode([
-                    'type' => 'queue_status',
-                    'size' => $currentQueueSize
-                ]) . "\n\n";
-                flush();
-            }
-            
-            sleep(1);
-            
-            // Verifica se cliente desconectou
-            if (connection_status() != CONNECTION_NORMAL) {
-                break;
-            }
+        } elseif (!empty($messages)) {
+            $newMessages = $messages;
         }
+        
+        $response = [
+            'status' => 'success',
+            'new_messages' => $newMessages,
+            'queue_size' => $queueSize,
+            'last_message_id' => !empty($messages) ? end($messages)['id'] : null
+        ];
+        
+        // Indicar se houve mudança na fila
+        if ($queueSize != $lastQueueSize) {
+            $response['queue_changed'] = true;
+        }
+        
+        $this->jsonResponse($response);
     }
     
-    // ==================== gRPC (SIMULADO) ====================
+    // gRPC simulado
     public function grpcEnviar() {
         $this->clearOutputBuffers();
         
@@ -172,32 +146,10 @@ class MessageController extends Controller {
         ]);
     }
     
-    // Método auxiliar para limpar buffers
     private function clearOutputBuffers() {
-        // Limpa todos os buffers de saída
         while (ob_get_level() > 0) {
             ob_end_clean();
         }
-        
-        // Desliga o buffer automático
         ob_implicit_flush(true);
-    }
-    
-    // Remova o método jsonResponse() daqui - ele já existe na classe pai Controller
-    
-    public function sseTeste() {
-        $this->clearOutputBuffers();
-        
-        header('Content-Type: text/event-stream');
-        header('Cache-Control: no-cache');
-        header('Connection: keep-alive');
-        
-        $i = 0;
-        while ($i < 20) {
-            $i++;
-            echo "data: " . json_encode(['time' => date('H:i:s'), 'count' => $i]) . "\n\n";
-            flush();
-            sleep(1);
-        }
     }
 }
