@@ -1,0 +1,126 @@
+{
+    "_readme": [
+        "This file locks the dependencies of your project to a known state",
+        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
+        "This file is @generated automatically"
+    ],
+    "content-hash": "a69918f092018c8909cf323eaa92e610",
+    "packages": [
+        {
+            "name": "grpc/grpc",
+            "version": "1.80.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/grpc/grpc-php.git",
+                "reference": "a0dc463d5d5064cdd7ff344f13f61d7e233f9b5a"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/grpc/grpc-php/zipball/a0dc463d5d5064cdd7ff344f13f61d7e233f9b5a",
+                "reference": "a0dc463d5d5064cdd7ff344f13f61d7e233f9b5a",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.1.0"
+            },
+            "require-dev": {
+                "google/auth": "^v1.3.0"
+            },
+            "suggest": {
+                "ext-protobuf": "For better performance, install the protobuf C extension.",
+                "google/protobuf": "To get started using grpc quickly, install the native protobuf library."
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Grpc\\": "src/lib/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "Apache-2.0"
+            ],
+            "description": "gRPC library for PHP",
+            "homepage": "https://grpc.io",
+            "keywords": [
+                "rpc"
+            ],
+            "support": {
+                "source": "https://github.com/grpc/grpc-php/tree/v1.80.0"
+            },
+            "time": "2026-03-30T09:22:39+00:00"
+        },
+        {
+            "name": "workerman/workerman",
+            "version": "v4.2.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/walkor/workerman.git",
+                "reference": "cafb5a43d93d7d30a16b32a57948581cca993562"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/walkor/workerman/zipball/cafb5a43d93d7d30a16b32a57948581cca993562",
+                "reference": "cafb5a43d93d7d30a16b32a57948581cca993562",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.0"
+            },
+            "suggest": {
+                "ext-event": "For better performance. "
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Workerman\\": "./"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "walkor",
+                    "email": "walkor@workerman.net",
+                    "homepage": "http://www.workerman.net",
+                    "role": "Developer"
+                }
+            ],
+            "description": "An asynchronous event driven PHP framework for easily building fast, scalable network applications.",
+            "homepage": "http://www.workerman.net",
+            "keywords": [
+                "asynchronous",
+                "event-loop"
+            ],
+            "support": {
+                "email": "walkor@workerman.net",
+                "forum": "http://wenda.workerman.net/",
+                "issues": "https://github.com/walkor/workerman/issues",
+                "source": "https://github.com/walkor/workerman",
+                "wiki": "http://doc.workerman.net/"
+            },
+            "funding": [
+                {
+                    "url": "https://opencollective.com/workerman",
+                    "type": "open_collective"
+                },
+                {
+                    "url": "https://www.patreon.com/walkor",
+                    "type": "patreon"
+                }
+            ],
+            "time": "2024-11-24T11:45:37+00:00"
+        }
+    ],
+    "packages-dev": [],
+    "aliases": [],
+    "minimum-stability": "stable",
+    "stability-flags": {},
+    "prefer-stable": false,
+    "prefer-lowest": false,
+    "platform": {},
+    "platform-dev": {},
+    "plugin-api-version": "2.9.0"
+}

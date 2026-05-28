@@ -2,75 +2,57 @@
 // Public/index.php
 session_start();
 
-// Carregar constantes
-require_once __DIR__ . '/../config/constants.php';
-
-// Autoload
+// Autoload simplificado
 spl_autoload_register(function($class) {
     $prefix = 'App\\';
-    $base_dir = APP_PATH . DS;
+    $base_dir = __DIR__ . '/../App/';
     $len = strlen($prefix);
     
-    if (strncmp($prefix, $class, $len) !== 0) {
-        return;
-    }
+    if (strncmp($prefix, $class, $len) !== 0) return;
     
     $relative_class = substr($class, $len);
-    $file = $base_dir . str_replace('\\', DS, $relative_class) . '.php';
+    $file = $base_dir . str_replace('\\', '/', $relative_class) . '.php';
     
-    if (file_exists($file)) {
-        require_once $file;
-        return true;
-    }
-    return false;
+    if (file_exists($file)) require $file;
 });
 
-// Debug
-if (DEBUG_MODE) {
-    error_reporting(E_ALL);
-    ini_set('display_errors', 1);
-}
-
-// Processar rota
+// Configurar para sempre retornar JSON para APIs
+$isApiRoute = false;
 $requestUri = $_SERVER['REQUEST_URI'];
 $method = $_SERVER['REQUEST_METHOD'];
 
-// Remove o caminho base
+// Remover base path
 $scriptName = $_SERVER['SCRIPT_NAME'];
 $basePath = rtrim(dirname($scriptName), '/\\');
-if ($basePath == '.' || empty($basePath)) {
-    $basePath = '';
-}
-
-// Remove base path da URI
 if ($basePath && strpos($requestUri, $basePath) === 0) {
     $requestUri = substr($requestUri, strlen($basePath));
 }
 
-// Remove query string
+// Remover query string
 if (($pos = strpos($requestUri, '?')) !== false) {
     $requestUri = substr($requestUri, 0, $pos);
 }
 
-// Garante que comece com /
 if (empty($requestUri) || $requestUri[0] !== '/') {
     $requestUri = '/' . $requestUri;
 }
 
-// Instanciar controller
-$controller = new App\Controllers\MessageController();
-
-// Rotas
-$routes = [
-    // API Routes
+// Rotas da API
+$apiRoutes = [
     ['pattern' => '/mensagens', 'method' => 'GET', 'handler' => 'getMessages'],
     ['pattern' => '/mensagens', 'method' => 'POST', 'handler' => 'postMessage'],
     ['pattern' => '/processar-fila', 'method' => 'POST', 'handler' => 'processQueue'],
-    ['pattern' => '/polling/atualizar', 'method' => 'GET', 'handler' => 'pollingUpdate'], // Novo endpoint
+    ['pattern' => '/polling/atualizar', 'method' => 'GET', 'handler' => 'pollingUpdate'],
+    ['pattern' => '/grpc/enviar', 'method' => 'POST', 'handler' => 'grpcEnviar'],
+    ['pattern' => '/udp/enviar', 'method' => 'POST', 'handler' => 'udpEnviar'],
+    ['pattern' => '/tcp/enviar', 'method' => 'POST', 'handler' => 'tcpEnviar'],
+    ['pattern' => '/set-sync-type', 'method' => 'POST', 'handler' => 'setSyncType'],
+    ['pattern' => '/critical-section-info', 'method' => 'GET', 'handler' => 'getCriticalSectionInfo'],
 ];
 
-// Verificar rotas de API
-foreach ($routes as $route) {
+$controller = new App\Controllers\MessageController();
+
+foreach ($apiRoutes as $route) {
     if ($requestUri === $route['pattern'] && $method === $route['method']) {
         $handler = $route['handler'];
         $controller->$handler();
@@ -78,10 +60,11 @@ foreach ($routes as $route) {
     }
 }
 
-// Verificar arquivos estáticos
+// Arquivos estáticos
 if (preg_match('/\.(css|js|png|jpg|jpeg|gif|ico)$/', $requestUri)) {
-    $filePath = PUBLIC_PATH . str_replace('/', DS, $requestUri);
+    $filePath = __DIR__ . $requestUri;
     if (file_exists($filePath)) {
+        $ext = pathinfo($filePath, PATHINFO_EXTENSION);
         $mime_types = [
             'css' => 'text/css',
             'js' => 'application/javascript',
@@ -91,7 +74,6 @@ if (preg_match('/\.(css|js|png|jpg|jpeg|gif|ico)$/', $requestUri)) {
             'gif' => 'image/gif',
             'ico' => 'image/x-icon'
         ];
-        $ext = pathinfo($filePath, PATHINFO_EXTENSION);
         if (isset($mime_types[$ext])) {
             header('Content-Type: ' . $mime_types[$ext]);
         }
@@ -100,13 +82,19 @@ if (preg_match('/\.(css|js|png|jpg|jpeg|gif|ico)$/', $requestUri)) {
     }
 }
 
-// Rota padrão
+// Rota principal
 if ($requestUri == '/' || $requestUri == '/index.php') {
     $controller->index();
     exit;
 }
 
-// 404
-header('Content-Type: application/json');
-http_response_code(404);
-echo json_encode(['error' => 'Rota não encontrada: ' . $requestUri]);
+// Se não encontrou rota e é API, retorna JSON de erro
+if (strpos($requestUri, '/api') === 0 || strpos($requestUri, '/polling') === 0) {
+    header('Content-Type: application/json');
+    http_response_code(404);
+    echo json_encode(['error' => 'Rota não encontrada: ' . $requestUri]);
+    exit;
+}
+
+// Fallback - tentar servir como página
+$controller->index();

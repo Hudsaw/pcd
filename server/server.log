@@ -1,0 +1,15 @@
+
+═══════════════════════════════════════════════════════
+  🚀 MessageFlow - Servidor Rodando!
+═══════════════════════════════════════════════════════
+  📡 WebSocket: ws://localhost:8080
+  🔬 gRPC:      http://localhost:50052
+═══════════════════════════════════════════════════════
+
+---------------------------------------------- WORKERMAN -----------------------------------------------
+Workerman version:4.2.1          PHP version:8.2.12
+----------------------------------------------- WORKERS ------------------------------------------------
+worker                                          listen                              processes   status
+@@@ Error: multi workers init in one php file are not support @@@
+@@@ See http://doc.workerman.net/faq/multi-woker-for-windows.html @@@
+none                                            websocket://0.0.0.0:8080            1           [ok]

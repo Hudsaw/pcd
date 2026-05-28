@@ -1,0 +1,35 @@
+pcd/
+├── App/
+│   ├── Core/
+│   │   ├── Controller.php
+│   │   ├── Model.php
+│   │   ├── Mutex.php
+│   │   └── Semaphore.php
+│   ├── Controllers/
+│   │   └── MessageController.php
+│   └── Models/
+│       ├── Message.php
+│       └── Queue.php
+├── Public/
+│   ├── css/
+│   │   └── style.css
+│   ├── js/
+│   │   └── app.js
+│   ├── views/
+│   │   └── home.php
+│   └── index.php
+├── server/
+│   ├── server.php
+│   └── start.php
+├── data/
+├── composer.json
+└── start.bat
+
+# 1. Instalar dependências
+cd pcd
+composer install
+
+# 2. Iniciar Apache no XAMPP
+
+# 3. Acessar
+http://localhost/pcd/Public/

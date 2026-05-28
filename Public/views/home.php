@@ -3,120 +3,263 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema Distribuído</title>
+    <title>MessageFlow - Plataforma de Mensageria Distribuída</title>
     <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="container">
-        <h1>🔗 Sistema Distribuído</h1>
-        <div class="subtitle">Síncrono | Assíncrono | REST | Polling | gRPC | Mutex</div>
-
-        <!-- Status Bar -->
-        <div class="status-bar">
-            <div class="status-item">
-                <span>🔄 Polling:</span>
-                <span id="pollingStatus">● Iniciando...</span>
-            </div>
-            <div class="status-item">
-                <span>📨 Fila:</span>
-                <span id="queueSize"><?php echo $queueSize; ?></span>
-            </div>
-            <div class="status-item">
-                <span>📝 Processadas:</span>
-                <span id="totalMessages"><?php echo count($messages); ?></span>
-            </div>
-        </div>
-
-        <div class="grid">
-            <!-- SÍNCRONO + REST -->
-            <div class="card">
-                <h2>📞 Comunicação SÍNCRONA + REST</h2>
-                <p><span class="badge badge-success">GET/POST /mensagens</span> Resposta imediata</p>
-                <div class="form-group">
-                    <label>Mensagem:</label>
-                    <input type="text" id="msgSync" placeholder="Digite sua mensagem...">
+    <div class="messaging-platform">
+        <!-- Sidebar Principal -->
+        <aside class="platform-sidebar">
+            <div class="platform-logo">
+                <div class="logo-icon">📨</div>
+                <div class="logo-text">
+                    <h2>MessageFlow</h2>
+                    <p>Distributed Messaging</p>
                 </div>
-                <button onclick="enviarSync()">📤 POST /mensagens (Sync)</button>
-                <button onclick="buscarMensagens()">📋 GET /mensagens</button>
-                <div id="syncArea" class="message-area"></div>
             </div>
 
-            <!-- ASSÍNCRONO + FILA -->
-            <div class="card">
-                <h2>📨 Comunicação ASSÍNCRONA</h2>
-                <p><span class="badge badge-info">Fila + Processamento</span> Mensagem entra na fila</p>
-                <div class="form-group">
-                    <label>Mensagem:</label>
-                    <input type="text" id="msgAsync" placeholder="Digite sua mensagem...">
+            <!-- Controle do Servidor -->
+            <div class="server-control">
+                <button id="connectBtn" class="btn btn-connect" onclick="startServer()" style="flex:1; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; padding: 10px; border-radius: 8px; color: white; cursor: pointer; font-weight: 500;">▶️ Conectar Servidor</button>
+                <button id="disconnectBtn" class="btn btn-disconnect" onclick="disconnectWebSocket()" style="display:none;" style="flex:1; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; padding: 10px; border-radius: 8px; color: white; cursor: pointer; font-weight: 500;">⏹️ Desconectar</button>
+                <div class="ws-status">
+                    <span class="ws-led"></span>
+                    <span id="wsStatusText">Desconectado</span>
                 </div>
-                <button onclick="enviarAsync()">📤 Enfileirar (Assíncrono)</button>
-                <button onclick="processarFila()">⚙️ Processar Fila</button>
-                <div id="asyncArea" class="message-area"></div>
             </div>
-        </div>
 
-        <div class="grid">
-            <!-- gRPC -->
-            <div class="card">
-                <h2>🔌 gRPC - Chamada entre Serviços</h2>
-                <p><span class="badge badge-purple">Protocol Buffers</span> RPC de alta performance</p>
-                <div class="form-group">
-                    <label>Mensagem:</label>
-                    <input type="text" id="msgGrpc" placeholder="Digite sua mensagem...">
+            <!-- Navegação -->
+            <nav class="platform-nav">
+                <a href="#" class="nav-item active">
+                    <span class="nav-icon">💬</span>
+                    <span>Mensagens</span>
+                    <span class="nav-badge" id="totalMessages">0</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <span class="nav-icon">📊</span>
+                    <span>Análise</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <span class="nav-icon">⚙️</span>
+                    <span>Configurações</span>
+                </a>
+            </nav>
+
+            <!-- Status da Conexão -->
+            <div class="connection-panel">
+                <div class="connection-status">
+                    <div class="status-led" id="statusLed"></div>
+                    <div class="status-info">
+                        <span class="status-label">WebSocket</span>
+                        <span class="status-value" id="wsDetailStatus">Desconectado</span>
+                    </div>
                 </div>
-                <button onclick="chamarGrpc()">📞 Chamar gRPC</button>
-                <div id="grpcArea" class="message-area"></div>
+                <div class="connection-details">
+                    <div class="detail-row">
+                        <span>Endpoint:</span>
+                        <code>ws://localhost:8080</code>
+                    </div>
+                    <div class="detail-row">
+                        <span>Protocolo:</span>
+                        <code>RFC 6455</code>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Área Principal de Mensagens -->
+        <main class="messages-area">
+            <div class="chat-header">
+                <div class="chat-info">
+                    <h1>📨 Fluxo de Mensagens</h1>
+                    <p>Comunicação síncrona e assíncrona com processamento distribuído</p>
+                </div>
+                <div class="header-stats">
+                    <div class="header-stat">
+                        <span class="stat-number" id="liveMessages">0</span>
+                        <span class="stat-label">mensagens/hora</span>
+                    </div>
+                    <div class="header-stat">
+                        <span class="stat-number" id="avgLatency">~50</span>
+                        <span class="stat-label">ms latência</span>
+                    </div>
+                </div>
             </div>
 
-            <!-- Polling - Tempo Real -->
-            <div class="card">
-                <h2>⚡ Atualização em TEMPO REAL (Polling)</h2>
-                <p><span class="badge badge-warning">Polling a cada 2 segundos</span> Compatível com qualquer hospedagem</p>
-                <div id="realtimeQueue" class="queue-item">Aguardando conexão...</div>
-                <div id="realtimeArea" class="message-area"></div>
+            <!-- Stream de Mensagens -->
+            <div class="messages-stream" id="messagesStream">
+                <div class="system-message">
+                    <div class="message-bubble">🎉 Bem-vindo ao MessageFlow! Conecte-se ao servidor para começar.</div>
+                </div>
             </div>
-        </div>
 
-        <!-- Explicação da Região Crítica -->
-        <div class="card">
-            <h2>🔐 REGIÃO CRÍTICA - Controle de Concorrência</h2>
-            <div class="mutex-info">
-                <h3>🎯 QUAL recurso representa a região crítica?</h3>
-                <p><strong>A fila de mensagens (queue.json)</strong> - recurso compartilhado</p>
-                
-                <h3>⚠️ QUAL problema poderia ocorrer?</h3>
-                <p><strong>Race Condition</strong> - dois processos acessando a fila ao mesmo tempo:</p>
-                <ul>
-                    <li>Perda de mensagens</li>
-                    <li>Processamento duplicado</li>
-                    <li>Corrupção do JSON</li>
-                </ul>
-                
-                <h3>✅ QUAL solução foi utilizada?</h3>
-                <p><strong>MUTEX (Exclusão Mútua)</strong> com <code>flock()</code> do PHP</p>
-                <ul>
-                    <li>Operações enqueue/dequeue protegidas pelo Mutex</li>
-                    <li>Método <code>synchronized()</code> garante exclusão mútua</li>
-                </ul>
+            <!-- Input Area -->
+            <div class="composer-area">
+                <div class="message-composer">
+                    <textarea id="messageInput" class="composer-input" placeholder="Digite sua mensagem... Enter para síncrono, Ctrl+Enter para assíncrono" rows="2"></textarea>
+                    <div class="composer-actions">
+                        <button class="action-btn sync-btn" onclick="sendSyncMessage()">
+                            <span class="btn-icon">⚡</span>
+                            <span class="btn-text">Enviar Síncrono</span>
+                            <span class="btn-badge">Resposta Imediata</span>
+                        </button>
+                        <button class="action-btn async-btn" onclick="sendAsyncMessage()">
+                            <span class="btn-icon">📨</span>
+                            <span class="btn-text">Enfileirar</span>
+                            <span class="btn-badge">Processo Assíncrono</span>
+                        </button>
+                    </div>
+                </div>
             </div>
-        </div>
+        </main>
+
+        <!-- Painel Lateral de Métricas -->
+        <aside class="metrics-panel">
+            <!-- Métricas em Tempo Real -->
+            <div class="metrics-card">
+                <div class="card-header">
+                    <h3>📈 Métricas em Tempo Real</h3>
+                    <button class="refresh-btn" onclick="refreshMetrics()">↻</button>
+                </div>
+                <div class="metrics-grid">
+                    <div class="metric-item">
+                        <div class="metric-icon">📬</div>
+                        <div class="metric-info">
+                            <span class="metric-value" id="metricTotalSent">0</span>
+                            <span class="metric-label">Total Enviadas</span>
+                        </div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-icon">⚡</div>
+                        <div class="metric-info">
+                            <span class="metric-value" id="metricSync">0</span>
+                            <span class="metric-label">Síncronas</span>
+                        </div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-icon">📨</div>
+                        <div class="metric-info">
+                            <span class="metric-value" id="metricAsync">0</span>
+                            <span class="metric-label">Assíncronas</span>
+                        </div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-icon">⏳</div>
+                        <div class="metric-info">
+                            <span class="metric-value" id="metricQueue">0</span>
+                            <span class="metric-label">Na Fila</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- gRPC Card -->
+            <div class="grpc-card">
+                <div class="card-header">
+                    <h3>🔬 gRPC (HTTP/2)</h3>
+                    <span class="badge">Real</span>
+                </div>
+                <div class="grpc-body">
+                    <div class="grpc-input-group">
+                        <input type="text" id="msgGrpc" class="grpc-input" placeholder="Digite mensagem para gRPC...">
+                        <button class="grpc-send-btn" onclick="sendGrpcMessage()">Enviar</button>
+                    </div>
+                    <div id="grpcArea" class="grpc-messages-area">
+                        <div class="grpc-message system">[Sistema] Aguardando mensagens gRPC...</div>
+                    </div>
+                    <div class="grpc-info">
+                        <div class="info-row">
+                            <span>Endpoint:</span>
+                            <code>http://localhost:50052/grpc</code>
+                        </div>
+                        <div class="info-row">
+                            <span>Protocolo:</span>
+                            <span>HTTP/2</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Controle de Concorrência -->
+            <div class="config-card">
+                <div class="card-header">
+                    <h3>🔐 Controle de Concorrência</h3>
+                    <span class="badge" id="syncTypeBadge">MUTEX</span>
+                </div>
+                <div class="config-body">
+                    <div class="config-option">
+                        <label class="radio-label">
+                            <input type="radio" name="syncType" value="mutex" checked>
+                            <span class="radio-custom"></span>
+                            <div class="option-content">
+                                <strong>🔒 Mutex (Lock)</strong>
+                                <small>Exclusão mútua - apenas um processo por vez</small>
+                            </div>
+                        </label>
+                    </div>
+                    <div class="config-option">
+                        <label class="radio-label">
+                            <input type="radio" name="syncType" value="semaphore">
+                            <span class="radio-custom"></span>
+                            <div class="option-content">
+                                <strong>🚦 Semáforo Binário</strong>
+                                <small>Controle de acesso com permissões</small>
+                            </div>
+                        </label>
+                    </div>
+                    <button class="apply-btn" onclick="applySyncType()">Aplicar Configuração</button>
+                </div>
+            </div>
+
+            <!-- Fila de Processamento -->
+            <div class="queue-card">
+                <div class="card-header">
+                    <h3>📋 Fila de Processamento</h3>
+                    <span class="queue-badge" id="queueCount">0</span>
+                </div>
+                <div class="queue-list" id="queueList">
+                    <div class="queue-empty">Nenhuma mensagem na fila</div>
+                </div>
+                <div class="queue-info">
+                    <div class="info-row">
+                        <span>Processador:</span>
+                        <span>Background Worker</span>
+                    </div>
+                    <div class="info-row">
+                        <span>Intervalo:</span>
+                        <span>3 segundos</span>
+                    </div>
+                    <div class="info-row">
+                        <span>Estratégia:</span>
+                        <span>FIFO</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Região Crítica -->
+            <div class="critical-card">
+                <div class="card-header">
+                    <h3>⚠️ Região Crítica</h3>
+                    <span class="critical-badge">Ativa</span>
+                </div>
+                <div class="critical-content">
+                    <div class="critical-resource">
+                        <span class="resource-icon">📁</span>
+                        <div class="resource-info">
+                            <strong>queue.json</strong>
+                            <small>Recurso Compartilhado</small>
+                        </div>
+                    </div>
+                    <div class="critical-explanation">
+                        <p><strong>Problema:</strong> Race Condition - perda de dados</p>
+                        <p><strong>Solução:</strong> <span id="criticalSolution">Mutex via flock()</span></p>
+                    </div>
+                </div>
+            </div>
+        </aside>
     </div>
 
-    <!-- JavaScripts -->
-    <script src="js/sync.js"></script>
-    <script src="js/async.js"></script>
-    <script src="js/grpc.js"></script>
-    <script src="js/polling.js"></script>
-    
-    <script>
-        setTimeout(function() {
-            console.log('=== Verificação de Funções ===');
-            console.log('enviarSync:', typeof enviarSync);
-            console.log('buscarMensagens:', typeof buscarMensagens);
-            console.log('enviarAsync:', typeof enviarAsync);
-            console.log('processarFila:', typeof processarFila);
-            console.log('chamarGrpc:', typeof chamarGrpc);
-        }, 500);
-    </script>
+    <script src="js/app.js"></script>
 </body>
 </html>

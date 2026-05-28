@@ -1,0 +1,41 @@
+<?php return array(
+    'root' => array(
+        'name' => '__root__',
+        'pretty_version' => 'dev-main',
+        'version' => 'dev-main',
+        'reference' => 'f0d78678cddbafa3f5dd260e3a6cf1aa3fde7179',
+        'type' => 'library',
+        'install_path' => __DIR__ . '/../../',
+        'aliases' => array(),
+        'dev' => true,
+    ),
+    'versions' => array(
+        '__root__' => array(
+            'pretty_version' => 'dev-main',
+            'version' => 'dev-main',
+            'reference' => 'f0d78678cddbafa3f5dd260e3a6cf1aa3fde7179',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../../',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
+        'grpc/grpc' => array(
+            'pretty_version' => '1.80.0',
+            'version' => '1.80.0.0',
+            'reference' => 'a0dc463d5d5064cdd7ff344f13f61d7e233f9b5a',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../grpc/grpc',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
+        'workerman/workerman' => array(
+            'pretty_version' => 'v4.2.1',
+            'version' => '4.2.1.0',
+            'reference' => 'cafb5a43d93d7d30a16b32a57948581cca993562',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../workerman/workerman',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
+    ),
+);
