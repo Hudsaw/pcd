@@ -116,44 +116,7 @@
 
         <!-- Painel Lateral de Métricas -->
         <aside class="metrics-panel">
-            <!-- Métricas em Tempo Real -->
-            <div class="metrics-card">
-                <div class="card-header">
-                    <h3>📈 Métricas em Tempo Real</h3>
-                    <button class="refresh-btn" onclick="refreshMetrics()">↻</button>
-                </div>
-                <div class="metrics-grid">
-                    <div class="metric-item">
-                        <div class="metric-icon">📬</div>
-                        <div class="metric-info">
-                            <span class="metric-value" id="metricTotalSent">0</span>
-                            <span class="metric-label">Total Enviadas</span>
-                        </div>
-                    </div>
-                    <div class="metric-item">
-                        <div class="metric-icon">⚡</div>
-                        <div class="metric-info">
-                            <span class="metric-value" id="metricSync">0</span>
-                            <span class="metric-label">Síncronas</span>
-                        </div>
-                    </div>
-                    <div class="metric-item">
-                        <div class="metric-icon">📨</div>
-                        <div class="metric-info">
-                            <span class="metric-value" id="metricAsync">0</span>
-                            <span class="metric-label">Assíncronas</span>
-                        </div>
-                    </div>
-                    <div class="metric-item">
-                        <div class="metric-icon">⏳</div>
-                        <div class="metric-info">
-                            <span class="metric-value" id="metricQueue">0</span>
-                            <span class="metric-label">Na Fila</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
+            
             <!-- gRPC Card -->
             <div class="grpc-card">
                 <div class="card-header">
@@ -171,44 +134,13 @@
                     <div class="grpc-info">
                         <div class="info-row">
                             <span>Endpoint:</span>
-                            <code>http://localhost:50052/grpc</code>
+                            <code>http://localhost:50051/grpc</code>
                         </div>
                         <div class="info-row">
                             <span>Protocolo:</span>
                             <span>HTTP/2</span>
                         </div>
                     </div>
-                </div>
-            </div>
-
-            <!-- Controle de Concorrência -->
-            <div class="config-card">
-                <div class="card-header">
-                    <h3>🔐 Controle de Concorrência</h3>
-                    <span class="badge" id="syncTypeBadge">MUTEX</span>
-                </div>
-                <div class="config-body">
-                    <div class="config-option">
-                        <label class="radio-label">
-                            <input type="radio" name="syncType" value="mutex" checked>
-                            <span class="radio-custom"></span>
-                            <div class="option-content">
-                                <strong>🔒 Mutex (Lock)</strong>
-                                <small>Exclusão mútua - apenas um processo por vez</small>
-                            </div>
-                        </label>
-                    </div>
-                    <div class="config-option">
-                        <label class="radio-label">
-                            <input type="radio" name="syncType" value="semaphore">
-                            <span class="radio-custom"></span>
-                            <div class="option-content">
-                                <strong>🚦 Semáforo Binário</strong>
-                                <small>Controle de acesso com permissões</small>
-                            </div>
-                        </label>
-                    </div>
-                    <button class="apply-btn" onclick="applySyncType()">Aplicar Configuração</button>
                 </div>
             </div>
 

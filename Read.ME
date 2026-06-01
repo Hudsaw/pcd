@@ -1,35 +1,146 @@
-pcd/
-├── App/
-│   ├── Core/
-│   │   ├── Controller.php
-│   │   ├── Model.php
-│   │   ├── Mutex.php
-│   │   └── Semaphore.php
-│   ├── Controllers/
-│   │   └── MessageController.php
-│   └── Models/
-│       ├── Message.php
-│       └── Queue.php
-├── Public/
-│   ├── css/
-│   │   └── style.css
-│   ├── js/
-│   │   └── app.js
-│   ├── views/
-│   │   └── home.php
-│   └── index.php
-├── server/
-│   ├── server.php
-│   └── start.php
-├── data/
-├── composer.json
-└── start.bat
+# MessageFlow - Sistema Distribuído de Mensagens
 
-# 1. Instalar dependências
+> Sistema completo de mensagens síncronas e assíncronas com API REST, WebSocket, gRPC e controle de concorrência usando Mutex/Semáforo.
+
+## 📋 Sobre o Projeto
+
+MessageFlow é uma aplicação web desenvolvida para demonstrar conceitos fundamentais de sistemas distribuídos:
+
+- ✅ Comunicação síncrona (requisição-resposta imediata)
+- ✅ Comunicação assíncrona (fila de mensagens)
+- ✅ API REST (GET/POST)
+- ✅ WebSocket em tempo real
+- ✅ gRPC (via bridge HTTP/JSON)
+- ✅ Região crítica e controle de concorrência
+- ✅ Mutex e Semáforo binário
+
+## 🏗️ Arquitetura do Sistema
+
+Cliente (Browser)
+     │
+     ├──► HTML/CSS/JS (Interface)
+     │    (Views)(Styles)(app.js + WS)
+     │
+     ├──► HTTP/REST ──► index.php - Porta 80 
+     │                      │
+     │                      └──► MessageController (Front Controller)
+     │                             ├──► Message Model (sync)
+     │                             └──► Queue Model (async)
+     │                       
+     ├──► WebSocket ──► server.php (Workerman - Porta 8080)
+     │
+     └──► gRPC/HTTP ──► server.php (Workerman HTTP - Porta 50052)
+
+pcd/
+├── App/                            # Código principal (MVC)
+│   ├── Core/                       
+│   │   ├── Controller.php          # Controller base
+│   │   ├── Model.php               # Model base
+│   │   ├── Mutex.php               # Mutex via flock()
+│   │   └── Semaphore.php           # Semáforo binário
+│   ├── Controllers/
+│   │   └── MessageController.php   # Controlador principal
+│   └── Models/
+│       ├── Message.php             # Model de mensagens
+│       └── Queue.php               # Model de fila com proteção
+├── Public/                         # Área pública (DocumentRoot)
+│   ├── css/
+│   │   └── style.css               # Estilos da aplicação
+│   ├── js/
+│   │   └── app.js                  # Frontend (REST + WebSocket)
+│   ├── views/
+│   │   └── home.php                # Template principal
+│   └── index.php                   # Front Controller
+├── server/
+│   ├── server.php                  # WebSocket (8080) + gRPC Bridge (50052)
+│   └── start.php                   # API controle (start/stop/status)
+├── data/                           # Dados persistentes
+├── vendor/                         # Dependências Composer
+├── composer.json                   # Dependências do projeto
+└── start.bat                       # Script inicialização para Windows
+
+
+## 🚀 Tecnologias Utilizadas
+
+| Tecnologia | Versão | Finalidade                  |
+|------------|--------|-----------------------------|
+| PHP        | 7.4+   | Backend principal           |
+| Workerman  | 4.2+   | Servidor WebSocket e gRPC Bridge |
+| gRPC       | 1.80+  | Comunicação entre serviços  |
+| JavaScript | -      | Frontend e WebSocket client |
+| HTML5/CSS3 | -      | Interface responsiva        |
+| JSON       | -      | Persistência de dados       |
+
+## 📦 Instalação e Configuração
+
+### Pré-requisitos
+
+- PHP 7.4 ou superior
+- Composer
+- XAMPP/WAMP/LAMP (ou servidor web com PHP)
+- Navegador atualizado
+
+### Passo a Passo
+
+```bash
+# Endereço do projeto
+https://github.com/Hudsaw/pcd.git
+
+# 1. Clone ou extraia o projeto
+cd C:/xampp/htdocs/
+
+# 2. Instale as dependências
 cd pcd
 composer install
 
-# 2. Iniciar Apache no XAMPP
+# 3. Inicie o Apache (XAMPP)
+# - Abra o XAMPP Control Panel
+# - Clique em "Start" no Apache
 
-# 3. Acessar
-http://localhost/pcd/Public/
+# 4. Inicie os servidores iniciais
+# Usando o script: ./start.bat
+
+# 5. Acesse a aplicação
+# http://localhost/pcd/Public/
+
+## 🎮 Como Usar
+
+# Interface Principal
+Envio de Mensagens
+Digite no campo superior
+Enter = Síncrono | Ctrl+Enter = Assíncrono
+Botões específicos para cada tipo
+
+# Painel de Controle
+Alternar entre Mutex/Semáforo
+Visualizar métricas em tempo real
+Ver informações da região crítica
+
+# WebSocket
+Clique "Conectar Servidor" para ativar
+Mensagens em tempo real entre múltiplos clientes
+Fallback automático via polling
+
+# gRPC
+Painel dedicado na lateral direita
+Envie mensagens via protocolo gRPC
+Visualize respostas específicas
+
+## 👥 Autor
+Desenvolvido por Hudson Borges e Edson Silva Júnior, como Trabalho Final de Sistemas Distribuídos.
+
+## 📄 Licença
+Este projeto é de uso acadêmico para demonstração de conceitos.
+
+## 🎯 Checklist de Requisitos
+API REST (GET /mensagens, POST /mensagens)
+Comunicação Síncrona
+Comunicação Assíncrona com Fila
+Socket/WebSocket para tempo real
+gRPC (HTTP/JSON)
+Região Crítica identificada
+Mutex (flock)
+Semáforo binário
+Documentação da solução
+Interface web funcional
+Demonstração de concorrência
