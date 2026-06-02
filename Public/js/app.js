@@ -23,7 +23,17 @@ const BASE_URL = getBaseUrl();
 // ============================================
 
 async function apiRequest(url, options = {}) {
-    const fullUrl = `${BASE_URL}${url}`;
+    // Detectar URL base corretamente
+    let fullUrl;
+    if (url.startsWith('http')) {
+        fullUrl = url;
+    } else {
+        // Usar URL relativa ao diretório atual
+        const path = window.location.pathname;
+        const basePath = path.substring(0, path.lastIndexOf('/') + 1);
+        fullUrl = basePath + url.replace(/^\//, '');
+    }
+    
     console.log('Requisição para:', fullUrl);
     
     try {
@@ -36,8 +46,12 @@ async function apiRequest(url, options = {}) {
             }
         });
         
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
         const text = await response.text();
-        console.log('Resposta:', text.substring(0, 200));
+        console.log('Resposta (primeiros 200 chars):', text.substring(0, 200));
         
         // Tentar parsear JSON
         try {
@@ -251,32 +265,44 @@ async function sendGrpcMessage() {
     
     addGrpcMessage('🔬 Enviando via gRPC...', 'system');
     
+    // Tentar o servidor gRPC na porta 50052
     try {
         const response = await fetch('http://localhost:50052/grpc', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json'
+            },
             body: JSON.stringify({ content: content })
         });
         
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
         const data = await response.json();
+        console.log('Resposta gRPC:', data);
         
         if (data.status === 'success') {
-            addGrpcMessage(`✅ Mensagem enviada!`, 'success');
+            addGrpcMessage(`✅ Mensagem enviada via gRPC!`, 'success');
             addGrpcMessage(`   📨 "${data.content}"`, 'info');
+            addGrpcMessage(`   🔬 Timestamp: ${data.timestamp}`, 'info');
             input.value = '';
             
+            // Adicionar mensagem na interface principal
             addMessageToUI({
                 content: content,
                 type: 'grpc',
-                timestamp: data.timestamp
+                timestamp: data.timestamp || new Date().toLocaleTimeString()
             });
             updateStats();
         } else {
-            addGrpcMessage('❌ Erro no gRPC', 'critical');
+            addGrpcMessage(`❌ Erro: ${data.message || 'Desconhecido'}`, 'critical');
         }
+        
     } catch (error) {
-        addGrpcMessage('❌ Servidor gRPC não está rodando!', 'critical');
-        addGrpcMessage('   Execute: php server/server.php', 'system');
+        console.error('Erro detalhado:', error);
+        addGrpcMessage(`❌ Erro: ${error.message}`, 'critical');
+        addGrpcMessage(`   Verifique se o servidor gRPC está rodando`, 'system');
     }
 }
 
@@ -425,6 +451,114 @@ function addGrpcMessage(text, type) {
     }
 }
 
+async function updateQueueDisplay() {
+    try {
+        // Tenta obter dados da fila via polling
+        const url = `${BASE_URL}/polling/atualizar?t=${Date.now()}`;
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        if (data.queue_size !== undefined) {
+            // Atualiza todos os elementos que mostram o tamanho da fila
+            const queueCountElements = document.querySelectorAll('#queueCount, .queue-badge');
+            queueCountElements.forEach(el => {
+                if (el) el.innerText = data.queue_size;
+            });
+            
+            // Atualiza também a métrica se existir
+            const metricQueueElem = document.getElementById('metricQueue');
+            if (metricQueueElem) metricQueueElem.innerText = data.queue_size;
+            
+            // Atualiza a lista visual da fila
+            await updateQueueList();
+            
+            console.log(`📊 Fila atualizada: ${data.queue_size} mensagens`);
+        }
+    } catch (error) {
+        console.log('Erro ao atualizar fila:', error);
+    }
+}
+
+// ============================================
+// FUNÇÃO PARA ATUALIZAR A LISTA VISUAL DA FILA
+// ============================================
+
+async function updateQueueList() {
+    const queueListEl = document.getElementById('queueList');
+    if (!queueListEl) return;
+    
+    try {
+        // Tenta obter a fila completa via API
+        const response = await fetch(`${BASE_URL}/polling/atualizar?t=${Date.now()}`);
+        const data = await response.json();
+        
+        if (data.queue_size === undefined) {
+            // Fallback: tenta via mensagens
+            const msgResponse = await apiRequest('/mensagens');
+            if (msgResponse.status === 'success') {
+                const asyncMessages = msgResponse.messages.filter(m => 
+                    m.type === 'async' || m.type === 'pending'
+                );
+                updateQueueListHTML(asyncMessages);
+                return;
+            }
+        }
+        
+        // Se temos o tamanho mas não os itens, mostrar apenas contagem
+        if (data.queue_size === 0) {
+            queueListEl.innerHTML = '<div class="queue-empty">📭 Nenhuma mensagem na fila</div>';
+        } else if (data.queue_size > 0) {
+            queueListEl.innerHTML = `<div class="queue-loading">⏳ ${data.queue_size} mensagem(s) aguardando processamento...</div>`;
+            // Tenta carregar os itens específicos
+            await loadQueueItems();
+        }
+        
+    } catch (error) {
+        console.log('Erro ao atualizar lista da fila:', error);
+        queueListEl.innerHTML = '<div class="queue-empty">⚠️ Não foi possível carregar a fila</div>';
+    }
+}
+
+// ============================================
+// CARREGAR ITENS ESPECÍFICOS DA FILA
+// ============================================
+
+async function loadQueueItems() {
+    const queueListEl = document.getElementById('queueList');
+    if (!queueListEl) return;
+    
+    try {
+        // Tenta acessar o arquivo queue.json diretamente via endpoint
+        const response = await fetch(`${BASE_URL}/../data/queue.json?t=${Date.now()}`);
+        if (response.ok) {
+            const queueData = await response.json();
+            if (Array.isArray(queueData) && queueData.length > 0) {
+                queueListEl.innerHTML = queueData.slice(0, 10).map(item => `
+                    <div class="queue-item">
+                        <span class="queue-item-icon">📨</span>
+                        <div class="queue-item-content">
+                            <div class="queue-item-text">${escapeHtml(item.content.substring(0, 40))}</div>
+                            <div class="queue-item-time">${item.created_at || 'aguardando'}</div>
+                        </div>
+                    </div>
+                `).join('');
+                
+                if (queueData.length > 10) {
+                    queueListEl.innerHTML += `<div class="queue-more">+${queueData.length - 10} mensagens...</div>`;
+                }
+                return;
+            }
+        }
+    } catch (error) {
+        console.log('Não foi possível carregar itens específicos:', error);
+    }
+    
+    // Fallback: mostrar apenas contagem
+    const queueCount = document.getElementById('queueCount');
+    if (queueCount && queueCount.innerText !== '0') {
+        queueListEl.innerHTML = `<div class="queue-waiting">⏳ ${queueCount.innerText} mensagens aguardando processamento assíncrono...</div>`;
+    }
+}
 async function updateStats() {
     try {
         const data = await apiRequest('/mensagens');
@@ -465,11 +599,6 @@ async function updateStats() {
     } catch (error) {
         console.log('Erro ao atualizar fila:', error);
     }
-}
-
-function refreshMetrics() {
-    updateStats();
-    addSystemMessage('📊 Métricas atualizadas');
 }
 
 function handleWebSocketMessage(data) {
@@ -513,7 +642,7 @@ function escapeHtml(text) {
 
 document.addEventListener('DOMContentLoaded', () => {
     // Iniciar polling
-    setInterval(pollingUpdate, 3000);
+    setInterval(pollingUpdate, 30000);
     setInterval(updateStats, 5000);
     updateStats();
     

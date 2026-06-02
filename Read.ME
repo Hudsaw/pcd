@@ -29,7 +29,7 @@ Cliente (Browser)
      │                       
      ├──► WebSocket ──► server.php (Workerman - Porta 8080)
      │
-     └──► gRPC/HTTP ──► server.php (Workerman HTTP - Porta 50052)
+     └──► gRPC/HTTP ──► server.php (Workerman HTTP - Porta 50051)
 
 pcd/
 ├── App/                            # Código principal (MVC)
@@ -97,10 +97,14 @@ composer install
 # - Abra o XAMPP Control Panel
 # - Clique em "Start" no Apache
 
-# 4. Inicie os servidores iniciais
+# 4. Altere configuração do XAMPP
+# notepad C:\xampp\php\php.ini
+# Procure por ;extension=sockets e remova o ponto e vírgula
+
+# 5. Inicie os servidores iniciais
 # Usando o script: ./start.bat
 
-# 5. Acesse a aplicação
+# 6. Acesse a aplicação
 # http://localhost/pcd/Public/
 
 ## 🎮 Como Usar

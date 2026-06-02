@@ -134,37 +134,12 @@
                     <div class="grpc-info">
                         <div class="info-row">
                             <span>Endpoint:</span>
-                            <code>http://localhost:50051/grpc</code>
+                            <code>http://localhost:50052/grpc</code>
                         </div>
                         <div class="info-row">
                             <span>Protocolo:</span>
                             <span>HTTP/2</span>
                         </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Fila de Processamento -->
-            <div class="queue-card">
-                <div class="card-header">
-                    <h3>📋 Fila de Processamento</h3>
-                    <span class="queue-badge" id="queueCount">0</span>
-                </div>
-                <div class="queue-list" id="queueList">
-                    <div class="queue-empty">Nenhuma mensagem na fila</div>
-                </div>
-                <div class="queue-info">
-                    <div class="info-row">
-                        <span>Processador:</span>
-                        <span>Background Worker</span>
-                    </div>
-                    <div class="info-row">
-                        <span>Intervalo:</span>
-                        <span>3 segundos</span>
-                    </div>
-                    <div class="info-row">
-                        <span>Estratégia:</span>
-                        <span>FIFO</span>
                     </div>
                 </div>
             </div>

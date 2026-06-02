@@ -1,0 +1,9 @@
+2026-06-02 15:23:22 pid:1 Error: Call to undefined method Workerman\Connection\TcpConnection::header() in C:\xampp\htdocs\pcd\server\grpc_server.php:36
+Stack trace:
+#0 C:\xampp\htdocs\pcd\vendor\workerman\workerman\Connection\TcpConnection.php(653): {closure}(Object(Workerman\Connection\TcpConnection), Object(Workerman\Protocols\Http\Request))
+#1 C:\xampp\htdocs\pcd\vendor\workerman\workerman\Events\Select.php(311): Workerman\Connection\TcpConnection->baseRead(Resource id #19)
+#2 C:\xampp\htdocs\pcd\vendor\workerman\workerman\Worker.php(1569): Workerman\Events\Select->loop()
+#3 C:\xampp\htdocs\pcd\vendor\workerman\workerman\Worker.php(1486): Workerman\Worker::forkWorkersForWindows()
+#4 C:\xampp\htdocs\pcd\vendor\workerman\workerman\Worker.php(561): Workerman\Worker::forkWorkers()
+#5 C:\xampp\htdocs\pcd\server\grpc_server.php(80): Workerman\Worker::runAll()
+#6 {main}

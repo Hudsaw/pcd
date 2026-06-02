@@ -21,6 +21,13 @@ $isApiRoute = false;
 $requestUri = $_SERVER['REQUEST_URI'];
 $method = $_SERVER['REQUEST_METHOD'];
 
+// IMPORTANTE: Forçar JSON para todas as requisições que não são para HTML
+$acceptHeader = $_SERVER['HTTP_ACCEPT'] ?? '';
+$isApiRequest = strpos($acceptHeader, 'application/json') !== false || 
+                strpos($requestUri, '/mensagens') !== false ||
+                strpos($requestUri, '/polling') !== false ||
+                strpos($requestUri, '/set-sync-type') !== false;
+
 // Remover base path
 $scriptName = $_SERVER['SCRIPT_NAME'];
 $basePath = rtrim(dirname($scriptName), '/\\');
@@ -60,6 +67,14 @@ foreach ($apiRoutes as $route) {
     }
 }
 
+// Se for requisição API mas não encontrou rota
+if ($isApiRequest) {
+    header('Content-Type: application/json');
+    http_response_code(404);
+    echo json_encode(['error' => 'Rota não encontrada: ' . $requestUri]);
+    exit;
+}
+
 // Arquivos estáticos
 if (preg_match('/\.(css|js|png|jpg|jpeg|gif|ico)$/', $requestUri)) {
     $filePath = __DIR__ . $requestUri;
@@ -88,13 +103,6 @@ if ($requestUri == '/' || $requestUri == '/index.php') {
     exit;
 }
 
-// Se não encontrou rota e é API, retorna JSON de erro
-if (strpos($requestUri, '/api') === 0 || strpos($requestUri, '/polling') === 0) {
-    header('Content-Type: application/json');
-    http_response_code(404);
-    echo json_encode(['error' => 'Rota não encontrada: ' . $requestUri]);
-    exit;
-}
-
-// Fallback - tentar servir como página
-$controller->index();
+// Fallback - página 404
+http_response_code(404);
+echo "<h1>404 - Página não encontrada</h1>";

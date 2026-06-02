@@ -1,15 +1,9 @@
 <?php
-// server/server.php
 require_once __DIR__ . '/../vendor/autoload.php';
-
 use Workerman\Worker;
 
 $dataDir = __DIR__ . '/../data';
 if (!file_exists($dataDir)) mkdir($dataDir, 0777, true);
-
-// ============================================
-// FUNÇÕES COMPARTILHADAS
-// ============================================
 
 function getMessages() {
     global $dataDir;
@@ -93,9 +87,6 @@ function processQueue() {
     return null;
 }
 
-// ============================================
-// SERVIDOR WEBSOCKET (Porta 8080)
-// ============================================
 $ws_worker = new Worker("websocket://0.0.0.0:8080");
 $ws_worker->count = 1;
 $connections = [];
@@ -154,7 +145,7 @@ $ws_worker->onClose = function($connection) use (&$connections) {
 };
 
 $ws_worker->onWorkerStart = function() use (&$connections) {
-    \Workerman\Lib\Timer::add(3, function() use (&$connections) {
+    \Workerman\Lib\Timer::add(30, function() use (&$connections) { //30 segundos
         $processed = processQueue();
         if ($processed) {
             foreach ($connections as $conn) {
@@ -164,47 +155,5 @@ $ws_worker->onWorkerStart = function() use (&$connections) {
     });
 };
 
-// ============================================
-// SERVIDOR HTTP BRIDGE (para gRPC)
-// ============================================
-$http_worker = new Worker("http://0.0.0.0:50052");
-$http_worker->count = 1;
-
-$http_worker->onMessage = function($connection, $request) {
-    $path = $request->uri();
-    
-    if ($path === '/grpc' && $request->method() === 'POST') {
-        $post = json_decode($request->rawBody(), true);
-        $content = $post['content'] ?? '';
-        
-        $message = saveMessage($content, 'grpc');
-        
-        $response = [
-            'status' => 'success',
-            'message' => '✅ Mensagem via gRPC REAL!',
-            'content' => $content,
-            'timestamp' => date('H:i:s'),
-            'protocol' => 'gRPC/HTTP2'
-        ];
-        
-        $connection->send(json_encode($response));
-        return;
-    }
-    
-    if ($path === '/health') {
-        $connection->send(json_encode(['status' => 'ok']));
-        return;
-    }
-    
-    $connection->send(json_encode(['error' => 'Not found']));
-};
-
-echo "\n";
-echo "═══════════════════════════════════════════════════════\n";
-echo "  🚀 MessageFlow - Servidor Rodando!\n";
-echo "═══════════════════════════════════════════════════════\n";
-echo "  📡 WebSocket: ws://localhost:8080\n";
-echo "  🔬 gRPC:      http://localhost:50052\n";
-echo "═══════════════════════════════════════════════════════\n\n";
-
+echo "📡 WebSocket Server rodando em ws://localhost:8080\n";
 Worker::runAll();
